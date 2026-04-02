@@ -20,14 +20,21 @@ data = """id,date,product,price,quantity
 """
 df = pd.read_csv(StringIO(data))
 
+# Identifikasi missing values
 print("Missing values per column:\n", df.isnull().sum())
+
+# Visualisasi missing values
+sns.heatmap(df.isnull(), cbar=False, cmap="viridis")
+plt.show()
 
 # Penanganan missing values
 # Mean imputation untuk kolom quantity
-df['quantity'].fillna(df['quantity'].mean(), inplace=True)
+df['quantity'] = df['quantity'].fillna(df['quantity'].mean())
 
 # Litwise deletion untuk baris dengan banyak missing values (dalam kasus ini kita anggap ada lebih dari 1 missing value sebagai banyak)
 df.dropna(thresh=len(df.columns) - 1, inplace=True)
+
+df['price'] = df['price'].fillna(df['price'].median())
 
 # Deteksi dan penghapusan outliers
 mean_price = df['price'].mean()
@@ -35,11 +42,11 @@ std_price = df['price'].std()
 df['z_score'] = (df['price'] - mean_price) / std_price
 
 threshold = 3
-df = df[np.abs(df['z_score']) < threshold]
+df = df[np.abs(df['z_score']) < threshold].copy()
 df.drop(columns=['z_score'], inplace=True)
 
 # Standarisasi format tanggal
-df['date'] = pd.to_datetime(df['date'], dayfirst=True, errors='coerce').dt.strftime('%Y-%m-%d')
+df['date'] = pd.to_datetime(df['date'], format='mixed', dayfirst=True)
 
 # Pengabungan kategori produk
 df['product'] = df['product'].str.upper()
